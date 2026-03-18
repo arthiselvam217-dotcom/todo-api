@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Todo List</title>
+  <style>
+    body { font-family: Arial; margin: 30px; }
+    li { margin-bottom: 10px; }
+    button { margin-left: 10px; }
+    input { padding: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Todo List</h1>
+
+  <input type="text" id="newTodo" placeholder="Enter new todo">
+  <button onclick="addTodo()">Add Todo</button>
+  <button onclick="loadTodos()">Reload Todos</button> <!-- Reload button -->
+
+  <ul id="todoList"></ul>
+
+  <script>
+    
+    async function loadTodos() {
+      try {
+        const res = await fetch('/todos');
+        const todos = await res.json();
+        const ul = document.getElementById('todoList');
+        ul.innerHTML = '';
+
+        todos.forEach(todo => {
+          const li = document.createElement('li');
+          li.textContent = todo.completed ? "✔️ " + todo.title : "❌ " + todo.title;
+
+          
+          const toggleBtn = document.createElement('button');
+          toggleBtn.textContent = todo.completed ? "Mark Incomplete" : "Mark Complete";
+          toggleBtn.onclick = async () => {
+            await fetch(`/todos/${todo._id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ completed: !todo.completed })
+            });
+            loadTodos();
+          };
+          li.appendChild(toggleBtn);
+
+          
+          const delBtn = document.createElement('button');
+          delBtn.textContent = "Delete";
+          delBtn.onclick = async () => {
+            await fetch(`/todos/${todo._id}`, { method: 'DELETE' });
+            loadTodos();
+          };
+          li.appendChild(delBtn);
+
+          ul.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Error loading todos:", err);
+      }
+    }
+
+    
+    async function addTodo() {
+      const input = document.getElementById('newTodo');
+      const title = input.value.trim();
+      if (!title) return alert("Enter a todo!");
+      try {
+        await fetch('/todos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+        input.value = '';
+        loadTodos();
+      } catch (err) {
+        console.error("Error adding todo:", err);
+      }
+    }
+
+    
+    setInterval(loadTodos, 5000);
+
+    
+    loadTodos();
+  </script>
+</body>
+</html>

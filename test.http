@@ -1,0 +1,6 @@
+
+GET http://localhost:3000/todos
+
+### Delete a todo
+# Replace :id with the actual _id of a Todo
+DELETE http://localhost:3000/todos/69ba9e4ff35322934a25bda3
